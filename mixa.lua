@@ -357,44 +357,88 @@ function UILibrary:CreateWindow(title)
             table.insert(AllUIElements.Frames, Sep)
         end
 
-        -- Image (supports getcustomasset and rbxassetid)
-        function tab:Image(assetPathOrId, size, scaleType, onClick)
-            local Image = Instance.new("ImageLabel")
+        -- Image (supports getcustomasset and rbxassetid) - mixed mode (replace/add)
+        function tab:Image(assetPathOrId, size, scaleType, onClick, mode)
+            mode = mode or "replace" -- "replace" or "add"
             size = size or UDim2.new(0, 400, 0, 200)
-            Image.Size = size
-            Image.BackgroundTransparency = 1
-            Image.ScaleType = scaleType or Enum.ScaleType.Fit
-            Image.Parent = TabFrame
+            scaleType = scaleType or Enum.ScaleType.Fit
 
-            -- Determine image source
-            if typeof(assetPathOrId) == "string" then
-                -- If string already contains rbxassetid:// or http(s) or starts with "rbxasset://"
-                if assetPathOrId:match("^rbxassetid://") or assetPathOrId:match("^rbxasset://") or assetPathOrId:match("^https?://") then
-                    Image.Image = assetPathOrId
-                else
-                    -- assume local file path for getcustomasset
-                    local success, result = pcall(function()
-                        return getcustomasset(assetPathOrId)
-                    end)
+            -- Helper to resolve image string
+            local function resolveImage(src)
+                if typeof(src) == "number" then
+                    return "rbxassetid://" .. tostring(src)
+                elseif typeof(src) == "string" then
+                    if src:match("^rbxassetid://") or src:match("^rbxasset://") or src:match("^https?://") then
+                        return src
+                    end
+                    local success, result = pcall(function() return getcustomasset(src) end)
                     if success and result then
-                        Image.Image = result
-                    else
-                        -- fallback: try to treat as numeric id string
-                        local num = tonumber(assetPathOrId)
-                        if num then
-                            Image.Image = "rbxassetid://" .. tostring(num)
-                        else
-                            Image.Image = ""
-                        end
+                        return result
+                    end
+                    local num = tonumber(src)
+                    if num then
+                        return "rbxassetid://" .. tostring(num)
                     end
                 end
-            elseif typeof(assetPathOrId) == "number" then
-                Image.Image = "rbxassetid://" .. tostring(assetPathOrId)
-            else
-                Image.Image = ""
+                return ""
             end
 
-            -- Optional click handler: wrap in ImageButton if needed
+            local resolved = resolveImage(assetPathOrId)
+
+            if mode == "replace" then
+                -- If we already created an image for this tab, update it
+                if self._ImageInstance and self._ImageInstance.Parent and self._ImageInstance:IsA("ImageLabel") then
+                    self._ImageInstance.Size = size
+                    self._ImageInstance.ScaleType = scaleType
+                    self._ImageInstance.Image = resolved
+                    -- update or create click button once
+                    if onClick then
+                        if not self._ImageBtn or not self._ImageBtn.Parent then
+                            local Btn = Instance.new("ImageButton")
+                            Btn.Size = UDim2.new(1, 0, 1, 0)
+                            Btn.BackgroundTransparency = 1
+                            Btn.Image = ""
+                            Btn.Parent = self._ImageInstance
+                            Btn.MouseButton1Click:Connect(function() pcall(onClick) end)
+                            self._ImageBtn = Btn
+                        else
+                            -- reconnect callback without duplicating overlay buttons
+                            -- destroy previous connections by replacing the button
+                            self._ImageBtn:Destroy()
+                            local Btn = Instance.new("ImageButton")
+                            Btn.Size = UDim2.new(1, 0, 1, 0)
+                            Btn.BackgroundTransparency = 1
+                            Btn.Image = ""
+                            Btn.Parent = self._ImageInstance
+                            Btn.MouseButton1Click:Connect(function() pcall(onClick) end)
+                            self._ImageBtn = Btn
+                        end
+                    else
+                        if self._ImageBtn and self._ImageBtn.Parent then
+                            self._ImageBtn:Destroy()
+                            self._ImageBtn = nil
+                        end
+                    end
+                    return self._ImageInstance
+                end
+
+                -- No existing image: clear any ImageLabels in the frame to avoid hidden stacking
+                for _, child in ipairs(TabFrame:GetChildren()) do
+                    if child:IsA("ImageLabel") then
+                        child:Destroy()
+                    end
+                end
+            end
+
+            -- Create new ImageLabel (for mode == "add" or fresh replace)
+            local Image = Instance.new("ImageLabel")
+            Image.Size = size
+            Image.BackgroundTransparency = 1
+            Image.ScaleType = scaleType
+            Image.Image = resolved
+            Image.Parent = TabFrame
+
+            -- Optional click handler: create a single ImageButton overlay
             if onClick then
                 local Btn = Instance.new("ImageButton")
                 Btn.Size = UDim2.new(1, 0, 1, 0)
@@ -404,9 +448,17 @@ function UILibrary:CreateWindow(title)
                 Btn.MouseButton1Click:Connect(function()
                     pcall(onClick)
                 end)
+                if mode == "replace" then
+                    self._ImageBtn = Btn
+                end
             end
 
             table.insert(AllUIElements.Images, Image)
+
+            if mode == "replace" then
+                self._ImageInstance = Image
+            end
+
             return Image
         end
 
