@@ -1,2 +1,3 @@
 # mixauilib
-roblox ui library
+dont use lib:notify
+ or lib.notify it will break your script
