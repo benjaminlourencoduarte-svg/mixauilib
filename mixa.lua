@@ -217,6 +217,43 @@ function UILibrary:CreateWindow(title)
             table.insert(AllUIElements.Labels, Label)
         end
         -- Notification system
+
+
+        -- Separator creator (new)
+        function tab:Separator()
+            local Sep = Instance.new("Frame")
+            Sep.Size = UDim2.new(0, 400, 0, 2)
+            Sep.BackgroundColor3 = Theme.Accent
+            Sep.BorderSizePixel = 0
+            Sep.Parent = TabFrame
+
+            table.insert(AllUIElements.Frames, Sep)
+        end
+
+        table.insert(tabs, {Button = TabButton, Frame = TabFrame})
+        table.insert(AllUIElements.Tabs, {Button = TabButton, Frame = TabFrame})
+
+        TabButton.MouseButton1Click:Connect(function()
+            for _, t in ipairs(tabs) do
+                t.Frame.Visible = false
+                t.Button.BackgroundColor3 = Theme.Button
+            end
+            TabFrame.Visible = true
+            TabButton.BackgroundColor3 = Theme.Accent
+        end)
+
+        if #tabs == 1 then
+            TabFrame.Visible = true
+            TabButton.BackgroundColor3 = Theme.Accent
+        end
+
+        return tab
+    end
+
+    return window
+end
+
+-- Set Theme Function
 function UILibrary:Notify(message, duration)
     duration = duration or 3 -- default 3 seconds
 
@@ -285,41 +322,6 @@ function UILibrary:Notify(message, duration)
     end)
 end
 
-        -- Separator creator (new)
-        function tab:Separator()
-            local Sep = Instance.new("Frame")
-            Sep.Size = UDim2.new(0, 400, 0, 2)
-            Sep.BackgroundColor3 = Theme.Accent
-            Sep.BorderSizePixel = 0
-            Sep.Parent = TabFrame
-
-            table.insert(AllUIElements.Frames, Sep)
-        end
-
-        table.insert(tabs, {Button = TabButton, Frame = TabFrame})
-        table.insert(AllUIElements.Tabs, {Button = TabButton, Frame = TabFrame})
-
-        TabButton.MouseButton1Click:Connect(function()
-            for _, t in ipairs(tabs) do
-                t.Frame.Visible = false
-                t.Button.BackgroundColor3 = Theme.Button
-            end
-            TabFrame.Visible = true
-            TabButton.BackgroundColor3 = Theme.Accent
-        end)
-
-        if #tabs == 1 then
-            TabFrame.Visible = true
-            TabButton.BackgroundColor3 = Theme.Accent
-        end
-
-        return tab
-    end
-
-    return window
-end
-
--- Set Theme Function
 function UILibrary:SetTheme(themeTable)
     for key, value in pairs(themeTable) do
         if Theme[key] ~= nil then
