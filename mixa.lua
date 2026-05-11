@@ -1,8 +1,7 @@
---// Roblox UI Library with Theme System by RoDeveloper (extended) //--
+
 
 local UILibrary = {};
 
--- Default theme
 local Theme = {
     Background = Color3.fromRGB(20, 20, 20),
     Topbar = Color3.fromRGB(10, 10, 10),
@@ -12,7 +11,6 @@ local Theme = {
     TextColor = Color3.fromRGB(255, 255, 255)
 };
 
--- Store all UI elements for theme updates
 local AllUIElements = {
     Windows = {},
     Tabs = {},
@@ -49,7 +47,7 @@ local function makeDraggable(frame, dragHandle)
     end)
 end
 
--- Theme updater
+
 local function applyTheme()
     for _, frame in ipairs(AllUIElements.Frames) do
         if frame.Name == "MainFrame" then
@@ -82,7 +80,7 @@ local function applyTheme()
     end
 end
 
--- Create window
+
 function UILibrary:CreateWindow(title)
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "UILibrary"
@@ -182,7 +180,7 @@ function UILibrary:CreateWindow(title)
 
         local tab = {}
 
-        -- Button creator
+       
         function tab:Button(name, func)
             local Button = Instance.new("TextButton")
             Button.Size = UDim2.new(0, 400, 0, 30)
