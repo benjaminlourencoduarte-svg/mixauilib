@@ -216,6 +216,74 @@ function UILibrary:CreateWindow(title)
 
             table.insert(AllUIElements.Labels, Label)
         end
+        -- Notification system
+function UILibrary:Notify(message, duration)
+    duration = duration or 3 -- default 3 seconds
+
+    local ScreenGui = game:GetService("CoreGui"):FindFirstChild("UILibrary")
+    if not ScreenGui then
+        ScreenGui = Instance.new("ScreenGui")
+        ScreenGui.Name = "UILibrary"
+        ScreenGui.Parent = game:GetService("CoreGui")
+    end
+
+    -- Container for notifications
+    local Container = ScreenGui:FindFirstChild("NotificationContainer")
+    if not Container then
+        Container = Instance.new("Frame")
+        Container.Name = "NotificationContainer"
+        Container.Size = UDim2.new(0, 300, 1, -50)
+        Container.Position = UDim2.new(1, -310, 0, 50)
+        Container.BackgroundTransparency = 1
+        Container.Parent = ScreenGui
+
+        local Layout = Instance.new("UIListLayout")
+        Layout.SortOrder = Enum.SortOrder.LayoutOrder
+        Layout.Padding = UDim.new(0, 6)
+        Layout.VerticalAlignment = Enum.VerticalAlignment.Top
+        Container:AddChild(Layout)
+    end
+
+    -- Notification frame
+    local NotifyFrame = Instance.new("Frame")
+    NotifyFrame.Size = UDim2.new(1, 0, 0, 40)
+    NotifyFrame.BackgroundColor3 = Theme.Button
+    NotifyFrame.BorderSizePixel = 0
+    NotifyFrame.Parent = Container
+
+    local Corner = Instance.new("UICorner")
+    Corner.CornerRadius = UDim.new(0, 6)
+    Corner.Parent = NotifyFrame
+
+    local Label = Instance.new("TextLabel")
+    Label.Size = UDim2.new(1, -10, 1, 0)
+    Label.Position = UDim2.new(0, 5, 0, 0)
+    Label.BackgroundTransparency = 1
+    Label.TextColor3 = Theme.TextColor
+    Label.Font = Enum.Font.Gotham
+    Label.TextSize = 14
+    Label.Text = message
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.Parent = NotifyFrame
+
+    -- Tween in
+    NotifyFrame.BackgroundTransparency = 1
+    Label.TextTransparency = 1
+    game:GetService("TweenService"):Create(NotifyFrame, TweenInfo.new(0.3), {BackgroundTransparency = 0}):Play()
+    game:GetService("TweenService"):Create(Label, TweenInfo.new(0.3), {TextTransparency = 0}):Play()
+
+    -- Auto-remove after duration
+    task.delay(duration, function()
+        if NotifyFrame and NotifyFrame.Parent then
+            local tween1 = game:GetService("TweenService"):Create(NotifyFrame, TweenInfo.new(0.3), {BackgroundTransparency = 1})
+            local tween2 = game:GetService("TweenService"):Create(Label, TweenInfo.new(0.3), {TextTransparency = 1})
+            tween1:Play()
+            tween2:Play()
+            tween1.Completed:Wait()
+            NotifyFrame:Destroy()
+        end
+    end)
+end
 
         -- Separator creator (new)
         function tab:Separator()
